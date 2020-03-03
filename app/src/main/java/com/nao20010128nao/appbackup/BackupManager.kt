@@ -32,5 +32,5 @@ class BackupManager(private val context: Context) {
     fun checkUpToDate(pkgInfo: PackageInfo, pkg: String) = pkgInfo.toManagedName() == getLastBackup(pkg)
     fun checkUpToDate(pkg: String) = checkUpToDate(pm.getPackageInfo(pkg, PackageManager.GET_META_DATA), pkg)
     fun getLastBackup(pkg: String): String = prefs.getString(pkg, "") ?: ""
-    fun PackageInfo.toManagedName(): String = "${versionName}_$versionCode"
+    fun PackageInfo.toManagedName(): String = "${versionName}_$versionCode".replace('/', '_')
 }
