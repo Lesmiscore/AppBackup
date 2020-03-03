@@ -22,7 +22,7 @@ class BackupManager(private val context: Context) {
             return
         }
         val appInfo = pm.getApplicationInfo(pkg, PackageManager.GET_META_DATA)
-        val newFilename = "${appInfo.loadLabel(pm)}_${pkgInfo.toManagedName()}.apk"
+        val newFilename = "${appInfo.loadLabel(pm)}_${pkgInfo.toManagedName()}.apk".replace('/', '_')
         File(appInfo.publicSourceDir).copyTo(File(backupDir, newFilename))
         prefs.edit()
             .putString(pkg, pkgInfo.toManagedName())
@@ -32,5 +32,5 @@ class BackupManager(private val context: Context) {
     fun checkUpToDate(pkgInfo: PackageInfo, pkg: String) = pkgInfo.toManagedName() == getLastBackup(pkg)
     fun checkUpToDate(pkg: String) = checkUpToDate(pm.getPackageInfo(pkg, PackageManager.GET_META_DATA), pkg)
     fun getLastBackup(pkg: String): String = prefs.getString(pkg, "") ?: ""
-    fun PackageInfo.toManagedName(): String = "${versionName}_$versionCode".replace('/', '_')
+    fun PackageInfo.toManagedName(): String = "${versionName}_$versionCode"
 }
