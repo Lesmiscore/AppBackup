@@ -17,7 +17,7 @@ class BackupManager(private val context: Context) {
 
     fun runBackup(pkg: String) {
         val pkgInfo = pm.getPackageInfo(pkg, PackageManager.GET_META_DATA)
-        if (pkgInfo.toManagedName() == getLastBackup(pkg)) {
+        if (checkUpToDate(pkgInfo, pkg)) {
             // backed up
             return
         }
@@ -29,6 +29,8 @@ class BackupManager(private val context: Context) {
             .apply()
     }
 
+    fun checkUpToDate(pkgInfo: PackageInfo, pkg: String) = pkgInfo.toManagedName() == getLastBackup(pkg)
+    fun checkUpToDate(pkg: String) = checkUpToDate(pm.getPackageInfo(pkg, PackageManager.GET_META_DATA), pkg)
     fun getLastBackup(pkg: String): String = prefs.getString(pkg, "") ?: ""
-    fun PackageInfo.toManagedName(): String = "${versionName}_$longVersionCode"
+    fun PackageInfo.toManagedName(): String = "${versionName}_$versionCode"
 }
