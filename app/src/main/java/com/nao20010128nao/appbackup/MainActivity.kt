@@ -24,8 +24,9 @@ class MainActivity : AppCompatActivity() {
         val pm = packageManager
         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
         val adapter = AppRecyclerAdapter(this, apps)
-        app_list.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        app_list.adapter = adapter
+        val rv=app_list
+        rv.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        rv.adapter = adapter
         apps.indices.forEach {
             adapter.runBackup(it)
         }
