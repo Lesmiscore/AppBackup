@@ -14,7 +14,7 @@ class BackupManager(private val context: Context) {
     init {
         backupDir.mkdirs()
     }
-
+    
     fun runBackup(pkg: String, force: Boolean = false) {
         val pkgInfo = pm.getPackageInfo(pkg, PackageManager.GET_META_DATA)
         if (checkUpToDate(pkgInfo, pkg) && !force) {
