@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         val rv=app_list
         rv.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         rv.adapter = adapter
-        apps.indices.forEach {
+        for(it in apps.indices) {
             adapter.runBackup(it)
         }
     }
