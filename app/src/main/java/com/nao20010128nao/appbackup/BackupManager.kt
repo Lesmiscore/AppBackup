@@ -14,7 +14,7 @@ class BackupManager(private val context: Context) {
     init {
         backupDir.mkdirs()
     }
-    
+
     fun runBackup(pkg: String, force: Boolean = false) {
         val pkgInfo = pm.getPackageInfo(pkg, PackageManager.GET_META_DATA)
         if (checkUpToDate(pkgInfo, pkg) && !force) {
@@ -23,13 +23,13 @@ class BackupManager(private val context: Context) {
         }
         val appInfo = pm.getApplicationInfo(pkg, PackageManager.GET_META_DATA)
         val newFilename = "${appInfo.loadLabel(pm)}_${pkgInfo.toManagedName()}.apk".replace('/', '_')
-        val destination=File(backupDir, newFilename)
-        try{
+        val destination = File(backupDir, newFilename)
+        try {
             File(appInfo.publicSourceDir).copyTo(destination)
             prefs.edit()
                 .putString(pkg, pkgInfo.toManagedName())
                 .apply()
-        }catch(e:Throwable){
+        } catch (e: Throwable) {
             e.printStackTrace()
             destination.delete()
         }

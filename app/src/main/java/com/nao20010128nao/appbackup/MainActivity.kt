@@ -2,7 +2,6 @@ package com.nao20010128nao.appbackup
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -24,10 +23,10 @@ class MainActivity : AppCompatActivity() {
         val pm = packageManager
         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
         val adapter = AppRecyclerAdapter(this, apps)
-        val rv=app_list
+        val rv = app_list
         rv.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         rv.adapter = adapter
-        for(it in apps.indices) {
+        for (it in apps.indices) {
             adapter.runBackup(it)
         }
     }
