@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">AppBackup</string>
+    <string name="backup_now">Backup now</string>
+    <string name="open">Open</string>
+    <string name="open_many">Open…</string>
+    <string name="uninstall">Uninstall</string>
 </resources>

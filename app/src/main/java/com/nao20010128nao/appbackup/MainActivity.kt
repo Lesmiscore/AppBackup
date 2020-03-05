@@ -1,11 +1,14 @@
 package com.nao20010128nao.appbackup
 
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -22,6 +25,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val pm = packageManager
         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            .sortedBy { it.loadLabel(packageManager).toString() }
         val adapter = AppRecyclerAdapter(this, apps)
         val rv = app_list
         rv.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
@@ -41,17 +45,72 @@ class MainActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: AppRecyclerViewHolder, position: Int) {
             val app = apps[position]
+            val packageName = app.packageName
             holder.appIcon.setImageDrawable(app.loadIcon(activity.packageManager))
             holder.appName.text = app.loadLabel(activity.packageManager)
-            holder.packageName.text = app.packageName
+            holder.packageName.text = packageName
             holder.view.setOnClickListener {
                 runBackup(position)
             }
-            if (backup.checkUpToDate(app.packageName)) {
-                holder.view.background = ContextCompat.getDrawable(activity, R.color.colorGood)
-            } else {
-                holder.view.background = ContextCompat.getDrawable(activity, R.color.colorOld)
+            holder.view.setOnLongClickListener {
+                val popup = PopupMenu(activity, holder.view)
+                val pm = activity.packageManager
+                popup.menu.apply {
+                    add(R.string.backup_now).setOnMenuItemClickListener {
+                        runBackup(position)
+                        true
+                    }
+                    val activities = pm.queryIntentActivities(
+                        Intent(Intent.ACTION_MAIN)
+                            .addCategory(Intent.CATEGORY_LAUNCHER)
+                        , 0
+                    ).asSequence()
+                        .filter { it.activityInfo.packageName == packageName }
+                        .sortedBy { it.loadLabel(pm).toString() }
+                        .map { it.activityInfo.name }
+                        .toList()
+                    if (activities.size == 1) {
+                        val info = activities.single()
+                        add(R.string.open).setOnMenuItemClickListener {
+                            activity.startActivity(
+                                Intent(Intent.ACTION_MAIN)
+                                    .addCategory(Intent.CATEGORY_LAUNCHER)
+                                    .setClassName(packageName, info)
+                            )
+                            true
+                        }
+                    } else if (activities.isNotEmpty()) {
+                        addSubMenu(R.string.open_many).also {
+                            for (info in activities) {
+                                add(R.string.open).setOnMenuItemClickListener {
+                                    activity.startActivity(
+                                        Intent(Intent.ACTION_MAIN)
+                                            .addCategory(Intent.CATEGORY_LAUNCHER)
+                                            .setClassName(packageName, info)
+                                    )
+                                    true
+                                }
+                            }
+                        }
+                    }
+                    add(R.string.uninstall).setOnMenuItemClickListener {
+                        val uri = Uri.fromParts("package", packageName, null)
+                        val intent = Intent(Intent.ACTION_DELETE, uri)
+                        activity.startActivity(intent)
+                        true
+                    }
+                }
+                popup.show()
+                true
             }
+
+            holder.view.background = ContextCompat.getDrawable(
+                activity, if (backup.checkUpToDate(packageName)) {
+                    R.color.colorGood
+                } else {
+                    R.color.colorOld
+                }
+            )
         }
 
         fun runBackup(position: Int) {
