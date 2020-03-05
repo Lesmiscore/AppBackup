@@ -67,26 +67,27 @@ class MainActivity : AppCompatActivity() {
                     ).asSequence()
                         .filter { it.activityInfo.packageName == packageName }
                         .sortedBy { it.loadLabel(pm).toString() }
-                        .map { it.activityInfo.name }
                         .toList()
                     if (activities.size == 1) {
                         val info = activities.single()
+                        val name = info.activityInfo.name
                         add(R.string.open).setOnMenuItemClickListener {
                             activity.startActivity(
                                 Intent(Intent.ACTION_MAIN)
                                     .addCategory(Intent.CATEGORY_LAUNCHER)
-                                    .setClassName(packageName, info)
+                                    .setClassName(packageName, name)
                             )
                             true
                         }
                     } else if (activities.isNotEmpty()) {
                         addSubMenu(R.string.open_many).also {
                             for (info in activities) {
-                                add(R.string.open).setOnMenuItemClickListener {
+                                val name = info.activityInfo.name
+                                it.add(info.loadLabel(pm)).setOnMenuItemClickListener {
                                     activity.startActivity(
                                         Intent(Intent.ACTION_MAIN)
                                             .addCategory(Intent.CATEGORY_LAUNCHER)
-                                            .setClassName(packageName, info)
+                                            .setClassName(packageName, name)
                                     )
                                     true
                                 }
