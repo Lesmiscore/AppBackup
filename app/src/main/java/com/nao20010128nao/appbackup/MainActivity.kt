@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
                 val pm = activity.packageManager
                 popup.menu.apply {
                     add(R.string.backup_now).setOnMenuItemClickListener {
-                        runBackup(position)
+                        runBackup(position, true)
                         true
                     }
                     val activities = pm.queryIntentActivities(
@@ -114,10 +114,10 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        fun runBackup(position: Int) {
+        fun runBackup(position: Int, force: Boolean = false) {
             val app = apps[position]
             activity.exec.submit {
-                backup.runBackup(app.packageName)
+                backup.runBackup(app.packageName, force)
                 activity.runOnUiThread {
                     notifyItemChanged(position)
                 }
