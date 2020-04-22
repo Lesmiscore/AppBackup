@@ -14,7 +14,7 @@ class AppInstalledReceiver : BroadcastReceiver() {
                 val backup = BackupManager(context)
                 val pkg = intent.data!!.encodedSchemeSpecificPart!!
                 Toast.makeText(context, pkg, Toast.LENGTH_SHORT).show()
-                backup.runBackup(pkg)
+                backup.runBackup(pkg, true)
             } catch (e: Throwable) {
                 val str = StringWriter().also {
                     PrintWriter(it).also {
