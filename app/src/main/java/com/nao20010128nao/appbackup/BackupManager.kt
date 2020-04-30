@@ -28,7 +28,7 @@ class BackupManager(private val context: Context) {
             File(appInfo.publicSourceDir).copyTo(destination)
             prefs.edit()
                 .putString(pkg, pkgInfo.toManagedName())
-                .apply()
+                .commit()
         } catch (e: Throwable) {
             e.printStackTrace()
             destination.delete()
