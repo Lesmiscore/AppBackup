@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Environment
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class BackupManager(private val context: Context) {
@@ -15,7 +17,7 @@ class BackupManager(private val context: Context) {
         backupDir.mkdirs()
     }
 
-    fun runBackup(pkg: String, force: Boolean = false) {
+    suspend fun runBackup(pkg: String, force: Boolean = false) {
         val pkgInfo = pm.getPackageInfo(pkg, PackageManager.GET_META_DATA)
         if (checkUpToDate(pkgInfo, pkg) && !force) {
             // backed up
@@ -25,10 +27,12 @@ class BackupManager(private val context: Context) {
         val newFilename = "${appInfo.loadLabel(pm)}_${pkgInfo.toManagedName()}.apk".replace('/', '_')
         val destination = File(backupDir, newFilename)
         try {
-            File(appInfo.publicSourceDir).copyTo(destination)
+            withContext(Dispatchers.IO) {
+                File(appInfo.publicSourceDir).copyTo(destination)
+            }
             prefs.edit()
                 .putString(pkg, pkgInfo.toManagedName())
-                .commit()
+                .apply()
         } catch (e: Throwable) {
             e.printStackTrace()
             destination.delete()

@@ -10,15 +10,20 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.Executors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
-    val exec = Executors.newFixedThreadPool(2)
+    val model: RunBackupViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,9 +40,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    class AppRecyclerAdapter(val activity: MainActivity, val apps: List<ApplicationInfo>) :
+    class AppRecyclerAdapter(private val activity: MainActivity, private val apps: List<ApplicationInfo>) :
         RecyclerView.Adapter<AppRecyclerViewHolder>() {
-        val backup = BackupManager(activity)
+        private val backup = BackupManager(activity)
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppRecyclerViewHolder =
             AppRecyclerViewHolder(activity.layoutInflater.inflate(R.layout.app_list_item, parent, false))
 
@@ -61,9 +66,7 @@ class MainActivity : AppCompatActivity() {
                         true
                     }
                     val activities = pm.queryIntentActivities(
-                        Intent(Intent.ACTION_MAIN)
-                            .addCategory(Intent.CATEGORY_LAUNCHER)
-                        , 0
+                        Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0
                     ).asSequence()
                         .filter { it.activityInfo.packageName == packageName }
                         .sortedBy { it.loadLabel(pm).toString() }
@@ -106,24 +109,25 @@ class MainActivity : AppCompatActivity() {
             }
 
             holder.view.background = ContextCompat.getDrawable(
-                activity, if (backup.checkUpToDate(packageName)) {
-                    R.color.colorGood
-                } else {
-                    R.color.colorOld
-                }
+                activity,
+                if (backup.checkUpToDate(packageName)) R.color.colorGood else R.color.colorOld
             )
         }
 
         fun runBackup(position: Int, force: Boolean = false) {
             val app = apps[position]
-            activity.exec.submit {
-                backup.runBackup(app.packageName, force)
-                activity.runOnUiThread {
+            activity.model.viewModelScope.launch {
+                withContext(Dispatchers.Default) {
+                    backup.runBackup(app.packageName, force)
+                }
+                withContext(Dispatchers.Main) {
                     notifyItemChanged(position)
                 }
             }
         }
     }
+
+    class RunBackupViewModel : ViewModel()
 
     class AppRecyclerViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         val appIcon: ImageView = view.findViewById(R.id.app_icon)
