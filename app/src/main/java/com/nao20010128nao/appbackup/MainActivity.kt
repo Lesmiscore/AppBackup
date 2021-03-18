@@ -12,11 +12,14 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.ActionBar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.File
+import java.nio.file.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         for (it in apps.indices) {
             adapter.runBackup(it)
         }
+        adapter.runMigration(supportActionBar)
     }
 
     class AppRecyclerAdapter(private val activity: MainActivity, private val apps: List<ApplicationInfo>) :
@@ -117,11 +121,29 @@ class MainActivity : AppCompatActivity() {
         fun runBackup(position: Int, force: Boolean = false) {
             val app = apps[position]
             activity.model.viewModelScope.launch {
-                withContext(Dispatchers.Default) {
+                withContext(Dispatchers.IO) {
                     backup.runBackup(app.packageName, force)
                 }
                 withContext(Dispatchers.Main) {
                     notifyItemChanged(position)
+                }
+            }
+        }
+
+        fun runMigration(tb: ActionBar?) {
+            activity.model.viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    val files = backup.oldBackupDir.listFiles() ?: return@withContext
+                    files.forEach{ file ->
+                        withContext(Dispatchers.Main) {
+                            tb?.subtitle = "Migrating ${file.name}"
+                        }
+                        // file.renameTo(File(backup.backupDir, file.name))
+                        Files.move(file.toPath(), File(backup.backupDir, file.name).toPath())
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    tb?.subtitle = null
                 }
             }
         }

@@ -10,7 +10,8 @@ import java.io.File
 
 class BackupManager(private val context: Context) {
     val prefs = context.getSharedPreferences("backups", Context.MODE_PRIVATE)
-    val backupDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "AppBackup")
+    val oldBackupDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "AppBackup")
+    val backupDir = File("/sdcard/AppBackup")
     val pm: PackageManager = context.packageManager
 
     init {
