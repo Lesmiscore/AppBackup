@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Build.VERSION
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -138,8 +139,13 @@ class MainActivity : AppCompatActivity() {
                         withContext(Dispatchers.Main) {
                             tb?.subtitle = "Migrating ${file.name}"
                         }
-                        // file.renameTo(File(backup.backupDir, file.name))
-                        Files.move(file.toPath(), File(backup.backupDir, file.name).toPath())
+                        val dst = File(backup.backupDir, file.name)
+                        if (VERSION.SDK_INT >= 26) {
+                            Files.move(file.toPath(), dst.toPath())
+                        }else{
+                            file.copyTo(dst)
+                            file.delete()
+                        }
                     }
                 }
                 withContext(Dispatchers.Main) {
