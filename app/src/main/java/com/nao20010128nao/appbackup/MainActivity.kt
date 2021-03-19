@@ -140,7 +140,8 @@ class MainActivity : AppCompatActivity() {
                         withContext(Dispatchers.Main) {
                             tb?.subtitle = "Migrating ${file.name}"
                         }
-                        val dst = File(backup.backupDir, file.name)
+                        val newName = file.name.replace("[:]".toRegex(), "_")
+                        val dst = File(backup.backupDir, newName)
                         try{
                             dst.delete()
                             if (VERSION.SDK_INT >= 26) {
