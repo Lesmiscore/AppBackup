@@ -1,5 +1,6 @@
 package com.nao20010128nao.appbackup
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -19,7 +20,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.io.File
+import java.io.*
 import java.nio.file.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
@@ -140,12 +141,28 @@ class MainActivity : AppCompatActivity() {
                             tb?.subtitle = "Migrating ${file.name}"
                         }
                         val dst = File(backup.backupDir, file.name)
-                        dst.delete()
-                        if (VERSION.SDK_INT >= 26) {
-                            Files.move(file.toPath(), dst.toPath())
-                        }else{
-                            file.copyTo(dst)
-                            file.delete()
+                        try{
+                            dst.delete()
+                            if (VERSION.SDK_INT >= 26) {
+                                Files.move(file.toPath(), dst.toPath())
+                            }else{
+                                file.copyTo(dst)
+                                file.delete()
+                            }
+                        }catch(e:Throwable){
+                            val stack = StringWriter().use{sw->
+                                PrintWriter(sw).use{pw->
+                                    e.printStackTrace(pw)
+                                }
+                                sw.toString()
+                            }
+                            withContext(Dispatchers.Main) {
+                                AlertDialog.Builder(activity)
+                                    .setTitle("Error")
+                                    .setMessage(stack)
+                                    .setPositiveButton("OK"){_,_->}
+                                    .show()
+                            }
                         }
                     }
                 }
