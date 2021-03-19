@@ -140,6 +140,7 @@ class MainActivity : AppCompatActivity() {
                             tb?.subtitle = "Migrating ${file.name}"
                         }
                         val dst = File(backup.backupDir, file.name)
+                        dst.delete()
                         if (VERSION.SDK_INT >= 26) {
                             Files.move(file.toPath(), dst.toPath())
                         }else{
